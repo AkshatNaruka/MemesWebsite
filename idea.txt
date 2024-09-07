@@ -1,0 +1,2 @@
+make it like get random memes on each click, also useer can submit memes 
+which are stored in firebase image storage. make it ad monetization
