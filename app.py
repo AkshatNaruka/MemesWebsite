@@ -1,31 +1,42 @@
-from flask import Flask, render_template, jsonify
-import requests
+from flask import Flask
+from config import Config
+from extensions import db, migrate
+from routes import main
+import redis
+import extensions
 
-app = Flask(__name__)
+# Import models so that they are registered with SQLAlchemy
+from models import User, MemeTemplate, TemplateCategory, TemplateField, Sticker, StickerCategory, Font, Meme, MemeLayer
 
-@app.route('/')
-def home():
-    return render_template('index.html')
+from commands import seed
 
-@app.route('/memes')
-def get_memes():
-    # Fetch memes from Reddit API
-    url = 'https://api.reddit.com/r/memes/hot'
-    headers = {'User-Agent': 'Mozilla/5.0'}
-    response = requests.get(url, headers=headers)
-    data = response.json()
+def create_app(config_class=Config):
+    app = Flask(__name__)
+    app.config.from_object(config_class)
+
+    # Initialize extensions
+    db.init_app(app)
+    migrate.init_app(app, db)
     
-    # Extract relevant information from the response
-    memes = []
-    for post in data['data']['children']:
-        meme = {
-            'title': post['data']['title'],
-            'image': post['data']['url'],
-            'score': post['data']['score']
-        }
-        memes.append(meme)
+    # Initialize Redis
+    if app.config.get('REDIS_URL'):
+        try:
+            pool = redis.ConnectionPool.from_url(app.config['REDIS_URL'])
+            extensions.redis_client = redis.Redis(connection_pool=pool)
+            app.redis = extensions.redis_client
+        except Exception as e:
+            print(f"Failed to connect to Redis: {e}")
+            extensions.redis_client = None
+
+    # Register blueprints
+    app.register_blueprint(main)
     
-    return jsonify(memes)
+    # Register commands
+    app.cli.add_command(seed)
+
+    return app
+
+app = create_app()
 
 if __name__ == '__main__':
     app.run()
