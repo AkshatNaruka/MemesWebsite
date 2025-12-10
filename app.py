@@ -5,6 +5,7 @@ from routes import main
 from api_v1 import api_v1
 import redis
 import extensions
+import os
 
 # Import models so that they are registered with SQLAlchemy
 from models import User, MemeTemplate, TemplateCategory, TemplateField, Sticker, StickerCategory, Font, Meme, MemeLayer, MemeDraft
@@ -12,7 +13,7 @@ from models import User, MemeTemplate, TemplateCategory, TemplateField, Sticker,
 from commands import seed
 
 def create_app(config_class=Config):
-    app = Flask(__name__)
+    app = Flask(__name__, static_folder='static', static_url_path='/static')
     app.config.from_object(config_class)
 
     # Initialize extensions
