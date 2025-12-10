@@ -16,3 +16,4 @@ redis
 Pillow
 python-dotenv
 psycopg2-binary
+marshmallow==3.19.0

@@ -2,11 +2,12 @@ from flask import Flask
 from config import Config
 from extensions import db, migrate
 from routes import main
+from api_v1 import api_v1
 import redis
 import extensions
 
 # Import models so that they are registered with SQLAlchemy
-from models import User, MemeTemplate, TemplateCategory, TemplateField, Sticker, StickerCategory, Font, Meme, MemeLayer
+from models import User, MemeTemplate, TemplateCategory, TemplateField, Sticker, StickerCategory, Font, Meme, MemeLayer, MemeDraft
 
 from commands import seed
 
@@ -30,6 +31,7 @@ def create_app(config_class=Config):
 
     # Register blueprints
     app.register_blueprint(main)
+    app.register_blueprint(api_v1)
     
     # Register commands
     app.cli.add_command(seed)

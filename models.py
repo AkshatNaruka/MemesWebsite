@@ -72,3 +72,14 @@ class MemeLayer(db.Model):
     # But I imported JSONB. Let's stick to generic JSON for SQLAlchemy to handle different DBs or just string.
     properties = db.Column(db.JSON) 
     z_index = db.Column(db.Integer, default=0)
+
+class MemeDraft(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(128))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    template_id = db.Column(db.Integer, db.ForeignKey('meme_template.id'), nullable=True)
+    data = db.Column(db.JSON) # Raw draft composition data
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    user = db.relationship('User', backref='drafts')
+    template = db.relationship('MemeTemplate')
