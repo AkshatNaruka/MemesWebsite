@@ -10,3 +10,9 @@ MarkupSafe==2.1.3
 requests==2.31.0
 urllib3==2.0.2
 Werkzeug==2.3.4
+Flask-SQLAlchemy
+Flask-Migrate
+redis
+Pillow
+python-dotenv
+psycopg2-binary
