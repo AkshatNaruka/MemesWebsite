@@ -2,6 +2,7 @@ import React from 'react';
 import { Search, Filter, Grid, List } from 'lucide-react';
 import { useAssets } from '@/hooks/useAssets';
 import { useTemplates } from '@/hooks/useTemplates';
+import { useEditor } from '@/contexts/EditorContext';
 import { cn } from '@/utils';
 
 interface SidebarProps {
@@ -9,9 +10,10 @@ interface SidebarProps {
 }
 
 export function Sidebar({ className }: SidebarProps) {
-  const [activeTab, setActiveTab] = React.useState<'templates' | 'stickers' | 'fonts'>('templates');
+  const [activeTab, setActiveTab] = React.useState<'templates' | 'stickers' | 'text' | 'fonts'>('templates');
   const [searchTerm, setSearchTerm] = React.useState('');
   const [selectedCategory, setSelectedCategory] = React.useState<number | null>(null);
+  const { state, actions } = useEditor();
 
   const { data: assets, isLoading: assetsLoading } = useAssets();
   const { data: templatesData, isLoading: templatesLoading } = useTemplates({
@@ -25,8 +27,29 @@ export function Sidebar({ className }: SidebarProps) {
   const tabs = [
     { id: 'templates', label: 'Templates', icon: Grid },
     { id: 'stickers', label: 'Stickers', icon: List },
+    { id: 'text', label: 'Text', icon: Filter },
     { id: 'fonts', label: 'Fonts', icon: Filter },
   ] as const;
+
+  const handleAddTextLayer = () => {
+    if (state.selectedTemplate) {
+      actions.addLayer({
+        type: 'text',
+        content: 'Add text here',
+        properties: {
+          x: 50,
+          y: 50,
+          fontSize: 32,
+          fontFamily: 'Arial',
+          color: '#000000',
+          zIndex: state.activeLayers.length,
+          visible: true,
+          textAlign: 'center'
+        },
+        isActive: true
+      });
+    }
+  };
 
   return (
     <div className={cn(
@@ -142,6 +165,25 @@ export function Sidebar({ className }: SidebarProps) {
               </div>
             )}
 
+            {/* Text */}
+            {activeTab === 'text' && (
+              <div className="space-y-3">
+                <button
+                  onClick={handleAddTextLayer}
+                  disabled={!state.selectedTemplate}
+                  className="w-full p-4 border-2 border-dashed border-primary-300 rounded-lg hover:border-primary-400 hover:bg-primary-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium text-primary-600"
+                >
+                  + Add Text Layer
+                </button>
+                {!state.selectedTemplate && (
+                  <div className="text-center text-gray-500 py-8">
+                    <Filter className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">Select a template to add text</p>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Fonts */}
             {activeTab === 'fonts' && (
               <div className="space-y-2">
@@ -165,8 +207,17 @@ export function Sidebar({ className }: SidebarProps) {
 
 // Template Card Component
 function TemplateCard({ template }: { template: any }) {
+  const { actions } = useEditor();
+
+  const handleClick = () => {
+    actions.setSelectedTemplate(template);
+  };
+
   return (
-    <div className="group cursor-pointer p-3 border border-gray-200 rounded-lg hover:border-primary-300 hover:shadow-sm transition-all">
+    <div 
+      onClick={handleClick}
+      className="group cursor-pointer p-3 border border-gray-200 rounded-lg hover:border-primary-300 hover:shadow-sm transition-all"
+    >
       <div className="aspect-square bg-gray-100 rounded-lg mb-2 overflow-hidden">
         <img
           src={template.image_url}
@@ -188,8 +239,44 @@ function TemplateCard({ template }: { template: any }) {
 
 // Sticker Card Component
 function StickerCard({ sticker }: { sticker: any }) {
+  const { actions, state } = useEditor();
+
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+    e.dataTransfer.effectAllowed = 'copy';
+    e.dataTransfer.setData('application/json', JSON.stringify({
+      type: 'sticker',
+      content: sticker.image_url,
+      name: sticker.name
+    }));
+  };
+
+  const handleClick = () => {
+    if (state.selectedTemplate) {
+      actions.addLayer({
+        type: 'sticker',
+        content: sticker.image_url,
+        properties: {
+          x: 50,
+          y: 50,
+          width: 100,
+          height: 100,
+          zIndex: state.activeLayers.length,
+          visible: true,
+          name: sticker.name
+        },
+        isActive: true
+      });
+    }
+  };
+
   return (
-    <div className="group cursor-pointer aspect-square border border-gray-200 rounded-lg overflow-hidden hover:border-primary-300 hover:shadow-sm transition-all">
+    <div 
+      draggable
+      onDragStart={handleDragStart}
+      onClick={handleClick}
+      className="group cursor-grab active:cursor-grabbing aspect-square border border-gray-200 rounded-lg overflow-hidden hover:border-primary-300 hover:shadow-sm transition-all"
+      title="Drag to canvas or click to add"
+    >
       <img
         src={sticker.image_url}
         alt={sticker.name}
@@ -198,6 +285,7 @@ function StickerCard({ sticker }: { sticker: any }) {
           const target = e.target as HTMLImageElement;
           target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgMTAwQzEwMCA5NS41NDMxIDk1LjU0MzEgOTIgOTIgOTJIMTA4QzExMiA5MiAxMTYgOTUuNTQzMSAxMTYgMTAwVjExMkMxMTYgMTE2LjQ1NyAxMTIgMTIwIDExMiAxMjBINThDNTggMTIwIDU0IDExNi40NTcgNTQgMTEyVjEwMFoiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+';
         }}
+        draggable={false}
       />
     </div>
   );

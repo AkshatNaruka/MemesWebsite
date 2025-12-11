@@ -8,7 +8,11 @@ import {
   RotateCw, 
   Trash2,
   Plus,
-  Minus
+  Minus,
+  Eye,
+  EyeOff,
+  Lock,
+  Unlock
 } from 'lucide-react';
 
 interface PropertiesPanelProps {
@@ -151,6 +155,20 @@ export function PropertiesPanel({ className }: PropertiesPanelProps) {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none text-sm resize-none"
                     rows={3}
                   />
+                  <label className="flex items-center gap-2 mt-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={activeLayer.properties.uppercase || false}
+                      onChange={(e) => actions.updateLayer(activeLayer.id, {
+                        properties: {
+                          ...activeLayer.properties,
+                          uppercase: e.target.checked
+                        }
+                      })}
+                      className="rounded"
+                    />
+                    <span className="text-sm text-gray-700">Uppercase</span>
+                  </label>
                 </div>
 
                 {/* Font Family */}
@@ -213,6 +231,32 @@ export function PropertiesPanel({ className }: PropertiesPanelProps) {
                   </div>
                 </div>
 
+                {/* Text Alignment */}
+                <div>
+                  <h3 className="text-sm font-medium text-gray-900 mb-2">Alignment</h3>
+                  <div className="flex gap-2">
+                    {(['left', 'center', 'right'] as const).map((align) => (
+                      <button
+                        key={align}
+                        onClick={() => actions.updateLayer(activeLayer.id, {
+                          properties: {
+                            ...activeLayer.properties,
+                            textAlign: align
+                          }
+                        })}
+                        className={cn(
+                          "flex-1 px-3 py-2 border rounded-lg text-sm font-medium transition-colors",
+                          (activeLayer.properties.textAlign || 'left') === align
+                            ? "bg-primary-100 border-primary-300 text-primary-700"
+                            : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                        )}
+                      >
+                        {align.charAt(0).toUpperCase() + align.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Color */}
                 <div>
                   <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center gap-2">
@@ -242,6 +286,76 @@ export function PropertiesPanel({ className }: PropertiesPanelProps) {
                       })}
                       className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none text-sm font-mono"
                     />
+                  </div>
+                </div>
+
+                {/* Stroke */}
+                <div>
+                  <h3 className="text-sm font-medium text-gray-900 mb-2">Stroke</h3>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={activeLayer.properties.strokeColor || '#ffffff'}
+                        onChange={(e) => actions.updateLayer(activeLayer.id, {
+                          properties: {
+                            ...activeLayer.properties,
+                            strokeColor: e.target.value
+                          }
+                        })}
+                        className="w-10 h-8 border border-gray-300 rounded-lg cursor-pointer"
+                      />
+                      <input
+                        type="number"
+                        min="0"
+                        max="10"
+                        value={activeLayer.properties.strokeWidth || 0}
+                        onChange={(e) => actions.updateLayer(activeLayer.id, {
+                          properties: {
+                            ...activeLayer.properties,
+                            strokeWidth: Number(e.target.value)
+                          }
+                        })}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none text-sm text-center"
+                        placeholder="Width"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Shadow */}
+                <div>
+                  <h3 className="text-sm font-medium text-gray-900 mb-2">Drop Shadow</h3>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={activeLayer.properties.shadowColor || '#000000'}
+                        onChange={(e) => actions.updateLayer(activeLayer.id, {
+                          properties: {
+                            ...activeLayer.properties,
+                            shadowColor: e.target.value
+                          }
+                        })}
+                        className="w-10 h-8 border border-gray-300 rounded-lg cursor-pointer"
+                      />
+                      <label className="flex-1 text-xs text-gray-600">
+                        Blur: {activeLayer.properties.shadowBlur || 0}px
+                        <input
+                          type="range"
+                          min="0"
+                          max="20"
+                          value={activeLayer.properties.shadowBlur || 0}
+                          onChange={(e) => actions.updateLayer(activeLayer.id, {
+                            properties: {
+                              ...activeLayer.properties,
+                              shadowBlur: Number(e.target.value)
+                            }
+                          })}
+                          className="w-full mt-1"
+                        />
+                      </label>
+                    </div>
                   </div>
                 </div>
               </>
@@ -309,6 +423,59 @@ export function PropertiesPanel({ className }: PropertiesPanelProps) {
                   <Plus className="w-4 h-4" />
                 </button>
               </div>
+            </div>
+
+            {/* Opacity */}
+            <div>
+              <h3 className="text-sm font-medium text-gray-900 mb-3">Opacity</h3>
+              <div className="flex items-center gap-2">
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={(activeLayer.properties.opacity ?? 1) * 100}
+                  onChange={(e) => actions.updateLayer(activeLayer.id, {
+                    properties: {
+                      ...activeLayer.properties,
+                      opacity: Number(e.target.value) / 100
+                    }
+                  })}
+                  className="flex-1"
+                />
+                <span className="text-sm text-gray-600 w-10 text-center">
+                  {Math.round((activeLayer.properties.opacity ?? 1) * 100)}%
+                </span>
+              </div>
+            </div>
+
+            {/* Visibility & Lock Controls */}
+            <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 space-y-2">
+              <button
+                onClick={() => actions.toggleLayerVisibility(activeLayer.id)}
+                className="w-full flex items-center justify-between px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+              >
+                <span className="font-medium text-gray-700">
+                  {activeLayer.properties.visible !== false ? 'Visible' : 'Hidden'}
+                </span>
+                {activeLayer.properties.visible !== false ? (
+                  <Eye className="w-4 h-4 text-gray-600" />
+                ) : (
+                  <EyeOff className="w-4 h-4 text-gray-400" />
+                )}
+              </button>
+              <button
+                onClick={() => actions.toggleLayerLock(activeLayer.id)}
+                className="w-full flex items-center justify-between px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+              >
+                <span className="font-medium text-gray-700">
+                  {activeLayer.properties.locked ? 'Locked' : 'Unlocked'}
+                </span>
+                {activeLayer.properties.locked ? (
+                  <Lock className="w-4 h-4 text-red-600" />
+                ) : (
+                  <Unlock className="w-4 h-4 text-gray-400" />
+                )}
+              </button>
             </div>
           </div>
         )}
