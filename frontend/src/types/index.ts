@@ -134,6 +134,10 @@ export interface EditorState {
   currentUserId: number;
   isLoading: boolean;
   error: string | null;
+  filters: Filter;
+  zoom: number;
+  panX: number;
+  panY: number;
 }
 
 export interface Layer {
@@ -150,8 +154,52 @@ export interface Layer {
     color?: string;
     rotation?: number;
     zIndex: number;
+    opacity?: number;
+    visible?: boolean;
+    locked?: boolean;
+    // Text-specific
+    fontWeight?: number;
+    textDecoration?: string;
+    lineHeight?: number;
+    letterSpacing?: number;
+    textAlign?: 'left' | 'center' | 'right';
+    uppercase?: boolean;
+    strokeColor?: string;
+    strokeWidth?: number;
+    shadowColor?: string;
+    shadowBlur?: number;
+    shadowOffsetX?: number;
+    shadowOffsetY?: number;
+    // Image/Sticker-specific
+    flipH?: boolean;
+    flipV?: boolean;
+    // Layer grouping
+    groupId?: string;
+    name?: string;
   };
   isActive: boolean;
+}
+
+export interface Filter {
+  brightness: number;
+  contrast: number;
+  saturation: number;
+  blur: number;
+  hueRotate: number;
+}
+
+export interface EditorHistory {
+  past: EditorState[];
+  present: EditorState;
+  future: EditorState[];
+}
+
+export interface SerializedEditorState {
+  template: TemplateDetail | null;
+  layers: Layer[];
+  filters: Filter;
+  timestamp: number;
+  version: number;
 }
 
 // Component Props Types
